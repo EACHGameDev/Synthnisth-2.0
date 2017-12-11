@@ -10,10 +10,11 @@ public class CharacterBehaviours : MovingCharacter {
 	public List<Pigeon> enemiesOnScreen;
 	public BoxCollider2D bc;//passar o character como parâmetro no inspector
 	public Sword sword;
-	private bool _invencibleRush, _swordBomb;
+	private bool _invencibleRush, _swordBomb, _death;
 	float jumpForce = 550f;
 	KeyCode jump = KeyCode.S;//botão pra pular
 	//Power effect;
+	AudioManager ams;
 
 	void Start () {
 		an.SetBool ("Moving", false);
@@ -21,6 +22,9 @@ public class CharacterBehaviours : MovingCharacter {
 		an.SetBool ("Attacking", false);
 		an.SetBool ("Dead", false);
 		speed = 20f;
+		//Liga o som
+		ams= AudioManager.instance;
+
 	}
 
 	void FixedUpdate(){
@@ -37,15 +41,27 @@ public class CharacterBehaviours : MovingCharacter {
 		Move (Input.GetAxis ("Horizontal"));//isso passa como parametros os eixos horizontais. É necessário mecher nos axis do Unity e retirar o "a" e o "d" como gatilhos secudarios de horizontals
 		Jump ();
 	}
+	IEnumerator morte (){
+		an.SetBool ("Dead", true);
+		ams.playSound("die1");
+		rb.velocity = new Vector2 (0, 0);
+			rb.gravityScale = 0;
+		yield return new WaitForSeconds (2.150f);
+		an.SetBool ("Dead", false);
+		SceneManager.LoadScene ("prototipo", LoadSceneMode.Single);
+	}
 
-	public void GameOver(){
-		SceneManager.LoadScene ("prototipo",LoadSceneMode.Single);
+
+	public void GameOver(){		
+		StartCoroutine (morte ());
 	}
 
 	void Jump(){//esse código controla o pulo por um sistema dinâmico de contagem simples. O valor de jumps é zerado no código foot
 		if(Input.GetKeyDown(jump) && jumps < 2){
 			//rb.AddForce(new Vector2(rb.velocity.x, 0));
+			ams.playSound("jump");
 			rb.AddForce(new Vector2(rb.velocity.x, jumpForce));
+
 			jumps++;
 		}
 	}
